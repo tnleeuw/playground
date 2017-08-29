@@ -1,4 +1,4 @@
-package state_engine
+package state_engine_1
 
 
 /**
@@ -13,13 +13,13 @@ interface State
 /**
  * TODO: Indicate for a transition if it's automatic (system), or manual (user).
  */
-class Transition<T: State>(val name: String,
-                 val fromState: T,
-                 val toState: T,
-                 val preConditions: Iterable<StatefullEntity<T>.() -> Boolean>,
-                 val triggeredActions: Iterable<StatefullEntity<T>.() -> Unit>
+class Transition<S: State>(val name: String,
+                           val fromState: S,
+                           val toState: S,
+                           val preConditions: Iterable<StatefulEntity<S>.() -> Boolean>,
+                           val triggeredActions: Iterable<StatefulEntity<S>.() -> Unit>
                  ) {
-    fun isValid(entity: StatefullEntity<T>) : Boolean {
+    fun isValid(entity: StatefulEntity<S>) : Boolean {
         return entity.state == fromState && preConditions.all { predicate -> entity.predicate() }
     }
 
@@ -30,15 +30,15 @@ class Transition<T: State>(val name: String,
  * Abstract Representation of state engine in an entity
  *
  */
-abstract class StatefullEntity<T: State>() : AbstractAuditableEntity() {
+abstract class StatefulEntity<S: State>() : AbstractAuditableEntity() {
 
-    lateinit var state : T
+    lateinit var state : S
 
     fun listValidTransitions() : Iterable<String> {
         return  transitions.filter { transition -> transition.isValid(this) }.map { transition -> transition.name }
     }
 
-    fun findTransitionByName(name : String) : Transition<T> {
+    fun findTransitionByName(name : String) : Transition<S> {
         return transitions.first { it.name == name }
     }
 
@@ -49,5 +49,5 @@ abstract class StatefullEntity<T: State>() : AbstractAuditableEntity() {
         t.triggeredActions.forEach { action -> this.action() }
     }
 
-    abstract val transitions : Iterable<Transition<T>>
+    abstract val transitions : Iterable<Transition<S>>
 }
